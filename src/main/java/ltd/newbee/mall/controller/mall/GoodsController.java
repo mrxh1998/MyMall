@@ -95,8 +95,8 @@ public class GoodsController {
             before = 0L;
         }
         Long rank;
-        Long increment = redisCache.increment(Constants.GOODS_CLICK + goodsId);
-        if ((rank = HotGoodsScoreCalculateUtil.checkClick(before, increment)) > 0) {
+        redisCache.redisTemplate.opsForValue().set(Constants.GOODS_CLICK + goodsId,before+1);
+        if ((rank = HotGoodsScoreCalculateUtil.checkClick(before, before+1)) > 0) {
             Double score = redisCache.redisTemplate.opsForZSet().score(Constants.HOTGOODS, goodsId);
             score += Constants.MONTH_SELLING_WEIGHT * rank;
             redisCache.setCacheZset(Constants.HOTGOODS, goodsId, score);
