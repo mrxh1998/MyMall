@@ -11,11 +11,13 @@ import ltd.newbee.mall.entity.NewBeeMallGoods;
 import ltd.newbee.mall.entity.NewBeeMallSeckill;
 import ltd.newbee.mall.redis.RedisCache;
 import ltd.newbee.mall.service.NewBeeMallSeckillService;
+import ltd.newbee.mall.task.HotGoodsScheduleTask;
 import ltd.newbee.mall.util.BeanUtil;
 import ltd.newbee.mall.util.MD5Util;
 import ltd.newbee.mall.util.Result;
 import ltd.newbee.mall.util.ResultGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,8 +27,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -42,10 +47,15 @@ public class SecKillController {
     @Autowired
     private RedisCache redisCache;
 
+    @Autowired
+    HotGoodsScheduleTask hotGoodsScheduleTask;
     @GetMapping("/seckill")
     public String seckillIndex() {
         return "mall/seckill-list";
     }
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 获取服务器时间
@@ -75,9 +85,14 @@ public class SecKillController {
         return ResultGenerator.genSuccessResult();
     }
 
+    @GetMapping("/test")
+    @ResponseBody String test() {
+        hotGoodsScheduleTask.execute();
+        return null;
+    }
     /**
      * 获取秒杀链接
-     *
+     * 前端js逻辑控制，当事件等于秒杀时间时才会调用此接口获取链接
      * @param seckillId 秒杀商品ID
      * @return result
      */
@@ -108,7 +123,6 @@ public class SecKillController {
         SeckillSuccessVO seckillSuccessVO = newBeeMallSeckillService.executeSeckill(seckillId, userId);
         return ResultGenerator.genSuccessResult(seckillSuccessVO);
     }
-
     @GetMapping("/seckill/info/{seckillId}")
     public String seckillInfo(@PathVariable Long seckillId,
                               HttpServletRequest request,

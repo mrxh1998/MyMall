@@ -50,6 +50,7 @@ public class NewBeeMallUserServiceImpl implements NewBeeMallUserService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public String register(String loginName, String password) {
+        //重复性校验
         if (mallUserMapper.selectByLoginName(loginName) != null) {
             return ServiceResultEnum.SAME_LOGIN_NAME_EXIST.getResult();
         }

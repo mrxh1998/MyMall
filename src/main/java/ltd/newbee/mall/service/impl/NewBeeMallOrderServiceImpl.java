@@ -13,13 +13,11 @@ import ltd.newbee.mall.config.ProjectConfig;
 import ltd.newbee.mall.controller.vo.*;
 import ltd.newbee.mall.dao.*;
 import ltd.newbee.mall.entity.*;
+import ltd.newbee.mall.redis.RedisCache;
 import ltd.newbee.mall.service.NewBeeMallOrderService;
 import ltd.newbee.mall.task.OrderUnPaidTask;
 import ltd.newbee.mall.task.TaskService;
-import ltd.newbee.mall.util.BeanUtil;
-import ltd.newbee.mall.util.NumberUtil;
-import ltd.newbee.mall.util.PageQueryUtil;
-import ltd.newbee.mall.util.PageResult;
+import ltd.newbee.mall.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +51,8 @@ public class NewBeeMallOrderServiceImpl implements NewBeeMallOrderService {
     private NewBeeMallSeckillSuccessMapper newBeeMallSeckillSuccessMapper;
     @Autowired
     private TaskService taskService;
+    @Autowired
+    private RedisCache redisCache;
 
     @Override
     public PageResult getNewBeeMallOrdersPage(PageQueryUtil pageUtil) {
@@ -307,10 +307,10 @@ public class NewBeeMallOrderServiceImpl implements NewBeeMallOrderService {
         newBeeMallOrder.setTotalPrice(newBeeMallSeckill.getSeckillPrice());
         newBeeMallOrder.setUserId(userId);
         newBeeMallOrder.setUserAddress("秒杀测试地址");
-        newBeeMallOrder.setOrderStatus((byte) NewBeeMallOrderStatusEnum.ORDER_PAID.getOrderStatus());
-        newBeeMallOrder.setPayStatus((byte) PayStatusEnum.PAY_SUCCESS.getPayStatus());
-        newBeeMallOrder.setPayType((byte) PayTypeEnum.WEIXIN_PAY.getPayType());
-        newBeeMallOrder.setPayTime(new Date());
+        newBeeMallOrder.setOrderStatus((byte) NewBeeMallOrderStatusEnum.ORDER_PRE_PAY.getOrderStatus());
+        newBeeMallOrder.setPayStatus((byte) PayStatusEnum.PAY_ING.getPayStatus());
+        //newBeeMallOrder.setPayType((byte) PayTypeEnum.WEIXIN_PAY.getPayType());
+       // newBeeMallOrder.setPayTime(new Date());
         String extraInfo = "";
         newBeeMallOrder.setExtraInfo(extraInfo);
         if (newBeeMallOrderMapper.insertSelective(newBeeMallOrder) <= 0) {
@@ -434,6 +434,26 @@ public class NewBeeMallOrderServiceImpl implements NewBeeMallOrderService {
             newBeeMallOrder.setOrderStatus((byte) NewBeeMallOrderStatusEnum.ORDER_SUCCESS.getOrderStatus());
             newBeeMallOrder.setUpdateTime(new Date());
             if (newBeeMallOrderMapper.updateByPrimaryKeySelective(newBeeMallOrder) > 0) {
+                //月销量+1
+                Calendar calendar = Calendar.getInstance();
+                List<NewBeeMallOrderItem> newBeeMallOrderItems = newBeeMallOrderItemMapper
+                        .selectByOrderId(newBeeMallOrder.getOrderId());
+                for(NewBeeMallOrderItem newBeeMallOrderItem :newBeeMallOrderItems){
+                    Long before = redisCache.getCacheObject(Constants.GOODS_MONTH_SELL + (calendar.get(Calendar.MONTH) + 1)
+                            + newBeeMallOrderItem.getGoodsId());
+                    if(before == null){
+                        before = 0L;
+                    }
+                    Long rank;
+                    Long increment = redisCache.redisTemplate.opsForValue().increment(
+                            Constants.GOODS_MONTH_SELL + (calendar.get(Calendar.MONTH) + 1)
+                                    + newBeeMallOrderItem.getGoodsId(), newBeeMallOrderItem.getGoodsCount());
+                    if((rank = HotGoodsScoreCalculateUtil.checkMonth(before,increment)) > 0){
+                        Double score = redisCache.redisTemplate.opsForZSet().score(Constants.HOTGOODS, newBeeMallOrderItem.getGoodsId());
+                        score += Constants.MONTH_SELLING_WEIGHT * rank;
+                        redisCache.setCacheZset(Constants.HOTGOODS, newBeeMallOrderItem.getGoodsId(),score);
+                    }
+                }
                 return ServiceResultEnum.SUCCESS.getResult();
             } else {
                 return ServiceResultEnum.DB_ERROR.getResult();

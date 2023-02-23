@@ -116,7 +116,7 @@ public class ShoppingCartController {
         NewBeeMallUserVO user = (NewBeeMallUserVO) httpSession.getAttribute(Constants.MALL_USER_SESSION_KEY);
         List<NewBeeMallShoppingCartItemVO> myShoppingCartItems = newBeeMallShoppingCartService.getMyShoppingCartItems(user.getUserId());
         if (CollectionUtils.isEmpty(myShoppingCartItems)) {
-            //无数据则不跳转至结算页
+            //无数据则不跳转至结算页//
             return "/shop-cart";
         } else {
             //总价

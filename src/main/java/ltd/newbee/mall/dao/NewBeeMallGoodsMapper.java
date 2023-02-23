@@ -24,6 +24,8 @@ public interface NewBeeMallGoodsMapper {
 
     NewBeeMallGoods selectByPrimaryKey(Long goodsId);
 
+    List<NewBeeMallGoods> selectALl();
+
     NewBeeMallGoods selectByCategoryIdAndName(@Param("goodsName") String goodsName, @Param("goodsCategoryId") Long goodsCategoryId);
 
     int updateByPrimaryKeySelective(NewBeeMallGoods record);

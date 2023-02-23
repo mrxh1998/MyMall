@@ -17,6 +17,8 @@ import java.util.List;
 public interface NewBeeMallOrderMapper {
     int deleteByPrimaryKey(Long orderId);
 
+    List<NewBeeMallOrder> selectAllSuccessOrder();
+
     int insert(NewBeeMallOrder record);
 
     int insertSelective(NewBeeMallOrder record);

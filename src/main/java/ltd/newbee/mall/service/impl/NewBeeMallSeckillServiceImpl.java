@@ -151,6 +151,8 @@ public class NewBeeMallSeckillServiceImpl implements NewBeeMallSeckillService {
         try {
             newBeeMallSeckillMapper.killByProcedure(map);
         } catch (Exception e) {
+            // 回撤秒杀商品虚拟库存
+            redisCache.increment(Constants.SECKILL_GOODS_STOCK_KEY + seckillId);
             throw new NewBeeMallException(e.getMessage());
         }
         // 获取result -2sql执行失败 -1未插入数据 0未更新数据 1sql执行成功
@@ -164,6 +166,7 @@ public class NewBeeMallSeckillServiceImpl implements NewBeeMallSeckillService {
         long endExpireTime = endTime / 1000;
         long nowExpireTime = nowTime / 1000;
         redisCache.expire(Constants.SECKILL_SUCCESS_USER_ID + seckillId, endExpireTime - nowExpireTime, TimeUnit.SECONDS);
+        //每个用户只能购买一次
         NewBeeMallSeckillSuccess seckillSuccess = newBeeMallSeckillSuccessMapper.getSeckillSuccessByUserIdAndSeckillId(userId, seckillId);
         SeckillSuccessVO seckillSuccessVO = new SeckillSuccessVO();
         Long seckillSuccessId = seckillSuccess.getSecId();

@@ -8,12 +8,15 @@
  */
 package ltd.newbee.mall.service.impl;
 
+import com.google.common.collect.Lists;
+import ltd.newbee.mall.common.Constants;
 import ltd.newbee.mall.common.ServiceResultEnum;
 import ltd.newbee.mall.controller.vo.NewBeeMallIndexConfigGoodsVO;
 import ltd.newbee.mall.dao.IndexConfigMapper;
 import ltd.newbee.mall.dao.NewBeeMallGoodsMapper;
 import ltd.newbee.mall.entity.IndexConfig;
 import ltd.newbee.mall.entity.NewBeeMallGoods;
+import ltd.newbee.mall.redis.RedisCache;
 import ltd.newbee.mall.service.NewBeeMallIndexConfigService;
 import ltd.newbee.mall.util.BeanUtil;
 import ltd.newbee.mall.util.PageQueryUtil;
@@ -25,6 +28,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +39,12 @@ public class NewBeeMallIndexConfigServiceImpl implements NewBeeMallIndexConfigSe
 
     @Autowired
     private NewBeeMallGoodsMapper goodsMapper;
+
+    @Autowired
+    private RedisCache redisCache;
+
+    @Autowired
+    private NewBeeMallGoodsMapper newBeeMallGoodsMapper;
 
     @Override
     public PageResult getConfigsPage(PageQueryUtil pageUtil) {
@@ -93,6 +103,31 @@ public class NewBeeMallIndexConfigServiceImpl implements NewBeeMallIndexConfigSe
             List<Long> goodsIds = indexConfigs.stream().map(IndexConfig::getGoodsId).collect(Collectors.toList());
             List<NewBeeMallGoods> newBeeMallGoods = goodsMapper.selectByPrimaryKeys(goodsIds);
             newBeeMallIndexConfigGoodsVOS = BeanUtil.copyList(newBeeMallGoods, NewBeeMallIndexConfigGoodsVO.class);
+            for (NewBeeMallIndexConfigGoodsVO newBeeMallIndexConfigGoodsVO : newBeeMallIndexConfigGoodsVOS) {
+                String goodsName = newBeeMallIndexConfigGoodsVO.getGoodsName();
+                String goodsIntro = newBeeMallIndexConfigGoodsVO.getGoodsIntro();
+                // 字符串过长导致文字超出的问题
+                if (goodsName.length() > 30) {
+                    goodsName = goodsName.substring(0, 30) + "...";
+                    newBeeMallIndexConfigGoodsVO.setGoodsName(goodsName);
+                }
+                if (goodsIntro.length() > 22) {
+                    goodsIntro = goodsIntro.substring(0, 22) + "...";
+                    newBeeMallIndexConfigGoodsVO.setGoodsIntro(goodsIntro);
+                }
+            }
+        }
+        return newBeeMallIndexConfigGoodsVOS;
+    }
+
+    @Override
+    public List<NewBeeMallIndexConfigGoodsVO> getHotGoods() {
+        List<NewBeeMallIndexConfigGoodsVO> newBeeMallIndexConfigGoodsVOS = new ArrayList<>();
+        List<Long> hotGoodsId = Lists.newArrayList(redisCache.getCacheZset(Constants.HOTGOODS, 0L, (long) Constants.INDEX_GOODS_HOT_NUMBER));
+        List<NewBeeMallGoods> hotGoods = newBeeMallGoodsMapper.selectByPrimaryKeys(hotGoodsId);
+        if (!CollectionUtils.isEmpty(hotGoods)) {
+            //取出所有的goodsId
+            newBeeMallIndexConfigGoodsVOS = BeanUtil.copyList(hotGoods, NewBeeMallIndexConfigGoodsVO.class);
             for (NewBeeMallIndexConfigGoodsVO newBeeMallIndexConfigGoodsVO : newBeeMallIndexConfigGoodsVOS) {
                 String goodsName = newBeeMallIndexConfigGoodsVO.getGoodsName();
                 String goodsIntro = newBeeMallIndexConfigGoodsVO.getGoodsIntro();

@@ -73,7 +73,13 @@
             limit #{start},#{limit}
         </if>
     </select>
-
+    <select id="selectAllSuccessOrder" parameterType="Map" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from tb_newbee_mall_order
+        where order_status = 4
+        order by create_time desc
+    </select>
     <select id="getTotalNewBeeMallOrders" parameterType="Map" resultType="int">
         select count(*) from tb_newbee_mall_order
         <where>

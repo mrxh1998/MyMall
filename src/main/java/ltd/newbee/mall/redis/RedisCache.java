@@ -196,4 +196,31 @@ public class RedisCache {
         }
     }
 
+    /**
+     * 缓存Zset
+     *
+     * @param key    redis键
+     * @param object 缓存对象
+     * @param score  加权分
+     */
+    public <T> void setCacheZset(final String key, final T object, Double score) {
+        if (object != null) {
+            redisTemplate.opsForZSet().add(key, object, score);
+        }
+    }
+
+    /**
+     * 取出Zset
+     */
+    public Set getCacheZset(final String key, Long start, Long end) {
+        return redisTemplate.opsForZSet().reverseRange(key, start, end);
+    }
+    /**
+     * 删除zset
+     */
+    public void deleteCacheZset(final String key){
+        Long aLong = redisTemplate.opsForZSet().zCard(key);
+        redisTemplate.opsForZSet().remove(key,0,aLong);
+    }
+
 }

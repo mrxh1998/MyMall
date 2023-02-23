@@ -36,7 +36,7 @@ public class CouponController {
         NewBeeMallUserVO userVO = (NewBeeMallUserVO) session.getAttribute(Constants.MALL_USER_SESSION_KEY);
         List<NewBeeMallCouponVO> coupons = newBeeMallCouponService.selectMyCoupons(userVO.getUserId());
         request.setAttribute("myCoupons", coupons);
-        request.setAttribute("path", "myCoupons");
+        request.setAttribute("path", "myCoupons");//
         return "mall/my-coupons";
     }
 

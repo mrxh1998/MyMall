@@ -48,6 +48,13 @@
         from tb_newbee_mall_goods_info
         where goods_id = #{goodsId,jdbcType=BIGINT}
     </select>
+    <select id="selectALl" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        ,
+        <include refid="Blob_Column_List"/>
+        from tb_newbee_mall_goods_info
+    </select>
     <select id="selectByCategoryIdAndName" resultMap="ResultMapWithBLOBs">
         select
         <include refid="Base_Column_List"/>

@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.UnsupportedEncodingException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -193,20 +194,20 @@ public class OrderController {
     @GetMapping("/returnOrders/{orderNo}/{userId}")
     public String returnOrderDetailPage(HttpServletRequest request, @PathVariable String orderNo, @PathVariable Long userId) {
         log.info("支付宝return通知数据记录：orderNo: {}, 当前登陆用户：{}", orderNo, userId);
-        // NewBeeMallOrder newBeeMallOrder = judgeOrderUserId(orderNo, userId);
-        // 将notifyUrl中逻辑放到此处：未支付订单更新订单状态
-        // if (newBeeMallOrder.getOrderStatus() != NewBeeMallOrderStatusEnum.ORDER_PRE_PAY.getOrderStatus()
-        //         || newBeeMallOrder.getPayStatus() != PayStatusEnum.PAY_ING.getPayStatus()) {
-        //     throw new NewBeeMallException("订单关闭异常");
-        // }
-        // newBeeMallOrder.setOrderStatus((byte) NewBeeMallOrderStatusEnum.ORDER_PAID.getOrderStatus());
-        // newBeeMallOrder.setPayType((byte) 1);
-        // newBeeMallOrder.setPayStatus((byte) PayStatusEnum.PAY_SUCCESS.getPayStatus());
-        // newBeeMallOrder.setPayTime(new Date());
-        // newBeeMallOrder.setUpdateTime(new Date());
-        // if (!newBeeMallOrderService.updateByPrimaryKeySelective(newBeeMallOrder)) {
-        //     return "error/error_5xx";
-        // }
+         NewBeeMallOrder newBeeMallOrder = judgeOrderUserId(orderNo, userId);
+         //将notifyUrl中逻辑放到此处：未支付订单更新订单状态
+         if (newBeeMallOrder.getOrderStatus() != NewBeeMallOrderStatusEnum.ORDER_PRE_PAY.getOrderStatus()
+                 || newBeeMallOrder.getPayStatus() != PayStatusEnum.PAY_ING.getPayStatus()) {
+             throw new NewBeeMallException("订单关闭异常");
+         }
+         newBeeMallOrder.setOrderStatus((byte) NewBeeMallOrderStatusEnum.ORDER_PAID.getOrderStatus());
+         newBeeMallOrder.setPayType((byte) 1);
+         newBeeMallOrder.setPayStatus((byte) PayStatusEnum.PAY_SUCCESS.getPayStatus());
+         newBeeMallOrder.setPayTime(new Date());
+         newBeeMallOrder.setUpdateTime(new Date());
+         if (!newBeeMallOrderService.updateByPrimaryKeySelective(newBeeMallOrder)) {
+             return "error/error_5xx";
+         }
         NewBeeMallOrderDetailVO orderDetailVO = newBeeMallOrderService.getOrderDetailByOrderNo(orderNo, userId);
         if (orderDetailVO == null) {
             return "error/error_5xx";

@@ -74,6 +74,7 @@ public class PersonalController {
                         @RequestParam("verifyCode") String verifyCode,
                         @RequestParam("password") String password,
                         HttpSession httpSession) {
+        //合法性校验
         if (StringUtils.isEmpty(loginName)) {
             return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_NAME_NULL.getResult());
         }
@@ -84,6 +85,7 @@ public class PersonalController {
             return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_VERIFY_CODE_NULL.getResult());
         }
         String kaptchaCode = httpSession.getAttribute(Constants.MALL_VERIFY_CODE_KEY) + "";
+        //验证码校验
         if (StringUtils.isEmpty(kaptchaCode) || !verifyCode.toLowerCase().equals(kaptchaCode)) {
             return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_VERIFY_CODE_ERROR.getResult());
         }
@@ -105,6 +107,7 @@ public class PersonalController {
                            @RequestParam("verifyCode") String verifyCode,
                            @RequestParam("password") String password,
                            HttpSession httpSession) {
+        //合法性校验
         if (StringUtils.isEmpty(loginName)) {
             return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_NAME_NULL.getResult());
         }
@@ -114,6 +117,7 @@ public class PersonalController {
         if (StringUtils.isEmpty(verifyCode)) {
             return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_VERIFY_CODE_NULL.getResult());
         }
+        //验证码校验
         String kaptchaCode = httpSession.getAttribute(Constants.MALL_VERIFY_CODE_KEY) + "";
         if (StringUtils.isEmpty(kaptchaCode) || !verifyCode.toLowerCase().equals(kaptchaCode)) {
             return ResultGenerator.genFailResult(ServiceResultEnum.LOGIN_VERIFY_CODE_ERROR.getResult());

@@ -14,10 +14,13 @@ import ltd.newbee.mall.common.ServiceResultEnum;
 import ltd.newbee.mall.controller.vo.NewBeeMallGoodsDetailVO;
 import ltd.newbee.mall.controller.vo.SearchPageCategoryVO;
 import ltd.newbee.mall.entity.NewBeeMallGoods;
+import ltd.newbee.mall.redis.RedisCache;
 import ltd.newbee.mall.service.NewBeeMallCategoryService;
 import ltd.newbee.mall.service.NewBeeMallGoodsService;
 import ltd.newbee.mall.util.BeanUtil;
+import ltd.newbee.mall.util.HotGoodsScoreCalculateUtil;
 import ltd.newbee.mall.util.PageQueryUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Calendar;
 import java.util.Map;
 
 @Controller
@@ -35,6 +39,8 @@ public class GoodsController {
     private NewBeeMallGoodsService newBeeMallGoodsService;
     @Resource
     private NewBeeMallCategoryService newBeeMallCategoryService;
+    @Autowired
+    private RedisCache redisCache;
 
     @GetMapping({"/search", "/search.html"})
     public String searchPage(@RequestParam Map<String, Object> params, HttpServletRequest request) {
@@ -42,7 +48,7 @@ public class GoodsController {
             params.put("page", 1);
         }
         params.put("limit", Constants.GOODS_SEARCH_PAGE_LIMIT);
-        //封装分类数据
+        //封装分类数据//
         if (params.containsKey("goodsCategoryId") && !StringUtils.isEmpty(params.get("goodsCategoryId") + "")) {
             Long categoryId = Long.valueOf(params.get("goodsCategoryId") + "");
             SearchPageCategoryVO searchPageCategoryVO = newBeeMallCategoryService.getCategoriesForSearch(categoryId);
@@ -64,7 +70,7 @@ public class GoodsController {
         params.put("keyword", keyword);
         //搜索上架状态下的商品
         params.put("goodsSellStatus", Constants.SELL_STATUS_UP);
-        //封装商品数据
+        //封装商品数据//
         PageQueryUtil pageUtil = new PageQueryUtil(params);
         request.setAttribute("pageResult", newBeeMallGoodsService.searchNewBeeMallGoods(pageUtil));
         return "mall/search";
@@ -83,6 +89,18 @@ public class GoodsController {
         BeanUtil.copyProperties(goods, goodsDetailVO);
         goodsDetailVO.setGoodsCarouselList(goods.getGoodsCarousel().split(","));
         request.setAttribute("goodsDetail", goodsDetailVO);
+        //增加点击量
+        Long before = redisCache.getCacheObject(Constants.GOODS_CLICK + goodsId);
+        if (before == null) {
+            before = 0L;
+        }
+        Long rank;
+        Long increment = redisCache.increment(Constants.GOODS_CLICK + goodsId);
+        if ((rank = HotGoodsScoreCalculateUtil.checkClick(before, increment)) > 0) {
+            Double score = redisCache.redisTemplate.opsForZSet().score(Constants.HOTGOODS, goodsId);
+            score += Constants.MONTH_SELLING_WEIGHT * rank;
+            redisCache.setCacheZset(Constants.HOTGOODS, goodsId, score);
+        }
         return "mall/detail";
     }
 
