@@ -37,7 +37,9 @@ public class Constants {
     public final static long ALL_SELLING_WEIGHT = 10000L;
     public final static long MONTH_SELLING_WEIGHT = 10000L;
     public final static long CLICK_WEIGHT = 100L;
+    public final static String TOPIC_CUT_PRICE = "cut_price";
 
+    public final static String CUT_PRICE_CONTENT = "您购物车中的物品降价了！去购买您心仪的商品吧！";
     /**
      * 字符编码
      */
@@ -70,6 +72,10 @@ public class Constants {
      * 秒杀成功的用户set缓存
      */
     public static final String SECKILL_SUCCESS_USER_ID = "seckill_success_user_id:";
+    /**
+     * 将某件商品加入购物车的用户set
+     */
+    public static final String SHOP_CART_USER_ID = "shop_cart_user_id:";
     /**
      * 热点商品的缓存
      */

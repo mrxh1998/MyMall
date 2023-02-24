@@ -8,17 +8,21 @@
  */
 package ltd.newbee.mall.controller.admin;
 
+import ltd.newbee.mall.Event.EventProducer;
+import ltd.newbee.mall.entity.Event;
 import ltd.newbee.mall.common.Constants;
 import ltd.newbee.mall.common.NewBeeMallCategoryLevelEnum;
 import ltd.newbee.mall.common.NewBeeMallException;
 import ltd.newbee.mall.common.ServiceResultEnum;
 import ltd.newbee.mall.entity.GoodsCategory;
 import ltd.newbee.mall.entity.NewBeeMallGoods;
+import ltd.newbee.mall.redis.RedisCache;
 import ltd.newbee.mall.service.NewBeeMallCategoryService;
 import ltd.newbee.mall.service.NewBeeMallGoodsService;
 import ltd.newbee.mall.util.PageQueryUtil;
 import ltd.newbee.mall.util.Result;
 import ltd.newbee.mall.util.ResultGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -26,10 +30,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author 13
@@ -45,7 +46,10 @@ public class NewBeeMallGoodsController {
     private NewBeeMallGoodsService newBeeMallGoodsService;
     @Resource
     private NewBeeMallCategoryService newBeeMallCategoryService;
-
+    @Autowired
+    RedisCache redisCache;
+    @Autowired
+    EventProducer eventProducer;
     @GetMapping("/goods")
     public String goodsPage(HttpServletRequest request) {
         request.setAttribute("path", "newbee_mall_goods");
@@ -189,7 +193,19 @@ public class NewBeeMallGoodsController {
                 || StringUtils.isEmpty(newBeeMallGoods.getGoodsDetailContent())) {
             return ResultGenerator.genFailResult("参数异常！");
         }
+        NewBeeMallGoods originGoods = newBeeMallGoodsService.getNewBeeMallGoodsById(newBeeMallGoods.getGoodsId());
         String result = newBeeMallGoodsService.updateNewBeeMallGoods(newBeeMallGoods);
+        //如果商品售价下降，通知购物车中含有该商品的用户
+        Set<Long> userIds = redisCache.redisTemplate.opsForSet().members(Constants.SHOP_CART_USER_ID + newBeeMallGoods.getGoodsId());
+        if(ServiceResultEnum.SUCCESS.getResult().equals(result) && originGoods.getSellingPrice() > newBeeMallGoods.getSellingPrice()){
+            Event event = new Event();
+            event.setTopic(Constants.TOPIC_CUT_PRICE)
+                    .setUserId(1)
+                    .setEntityType(1)
+                    .setEntityUserIds(userIds)
+                    .setMap("goodsId",newBeeMallGoods.getGoodsId());
+            eventProducer.fireEvent(event);
+        }
         if (ServiceResultEnum.SUCCESS.getResult().equals(result)) {
             return ResultGenerator.genSuccessResult();
         } else {

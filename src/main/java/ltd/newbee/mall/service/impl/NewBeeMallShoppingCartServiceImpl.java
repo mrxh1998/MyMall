@@ -12,16 +12,21 @@ import ltd.newbee.mall.common.Constants;
 import ltd.newbee.mall.common.NewBeeMallException;
 import ltd.newbee.mall.common.ServiceResultEnum;
 import ltd.newbee.mall.controller.vo.NewBeeMallShoppingCartItemVO;
+import ltd.newbee.mall.controller.vo.NewBeeMallUserVO;
 import ltd.newbee.mall.dao.NewBeeMallGoodsMapper;
+import ltd.newbee.mall.dao.NewBeeMallOrderMapper;
 import ltd.newbee.mall.dao.NewBeeMallShoppingCartItemMapper;
 import ltd.newbee.mall.entity.NewBeeMallGoods;
 import ltd.newbee.mall.entity.NewBeeMallShoppingCartItem;
+import ltd.newbee.mall.redis.RedisCache;
 import ltd.newbee.mall.service.NewBeeMallShoppingCartService;
 import ltd.newbee.mall.util.BeanUtil;
+import ltd.newbee.mall.util.SpringContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -35,8 +40,11 @@ public class NewBeeMallShoppingCartServiceImpl implements NewBeeMallShoppingCart
     @Autowired
     private NewBeeMallGoodsMapper newBeeMallGoodsMapper;
 
+    @Autowired
+    private RedisCache redisCache;
+
     @Override
-    public String saveNewBeeMallCartItem(NewBeeMallShoppingCartItem newBeeMallShoppingCartItem) {
+    public String saveNewBeeMallCartItem(NewBeeMallShoppingCartItem newBeeMallShoppingCartItem,NewBeeMallUserVO userVO) {
         NewBeeMallShoppingCartItem temp = newBeeMallShoppingCartItemMapper.selectByUserIdAndGoodsId(newBeeMallShoppingCartItem.getUserId(), newBeeMallShoppingCartItem.getGoodsId());
         if (temp != null) {
             //已存在则修改该记录
@@ -59,6 +67,8 @@ public class NewBeeMallShoppingCartServiceImpl implements NewBeeMallShoppingCart
         }
         //保存记录
         if (newBeeMallShoppingCartItemMapper.insertSelective(newBeeMallShoppingCartItem) > 0) {
+            //添加购物车关系
+            redisCache.redisTemplate.opsForSet().add(Constants.SHOP_CART_USER_ID + newBeeMallShoppingCartItem.getGoodsId(),userVO.getUserId());
             return ServiceResultEnum.SUCCESS.getResult();
         }
         return ServiceResultEnum.DB_ERROR.getResult();

@@ -83,6 +83,8 @@ public class NewBeeMallGoodsServiceImpl implements NewBeeMallGoodsService {
             //name和分类id相同且不同id 不能继续修改
             return ServiceResultEnum.SAME_GOODS_EXIST.getResult();
         }
+        //如果商品售价下降，通知购物车中含有该商品的用户
+
         goods.setUpdateTime(new Date());
         if (goodsMapper.updateByPrimaryKeySelective(goods) > 0) {
             return ServiceResultEnum.SUCCESS.getResult();

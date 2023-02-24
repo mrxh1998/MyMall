@@ -9,8 +9,10 @@
 package ltd.newbee.mall.service;
 
 import ltd.newbee.mall.controller.vo.NewBeeMallShoppingCartItemVO;
+import ltd.newbee.mall.controller.vo.NewBeeMallUserVO;
 import ltd.newbee.mall.entity.NewBeeMallShoppingCartItem;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface NewBeeMallShoppingCartService {
@@ -21,7 +23,7 @@ public interface NewBeeMallShoppingCartService {
      * @param newBeeMallShoppingCartItem
      * @return
      */
-    String saveNewBeeMallCartItem(NewBeeMallShoppingCartItem newBeeMallShoppingCartItem);
+    String saveNewBeeMallCartItem(NewBeeMallShoppingCartItem newBeeMallShoppingCartItem, NewBeeMallUserVO user);
 
     /**
      * 修改购物车中的属性
