@@ -41,4 +41,6 @@ public interface NewBeeMallIndexConfigService {
     List<NewBeeMallIndexConfigGoodsVO> getHotGoods();
 
     Boolean deleteBatch(Long[] ids);
+
+    List<NewBeeMallIndexConfigGoodsVO> getNewGoods(long goodsNumber);
 }

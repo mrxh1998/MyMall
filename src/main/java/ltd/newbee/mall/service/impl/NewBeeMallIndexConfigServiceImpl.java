@@ -25,10 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -123,7 +120,7 @@ public class NewBeeMallIndexConfigServiceImpl implements NewBeeMallIndexConfigSe
     @Override
     public List<NewBeeMallIndexConfigGoodsVO> getHotGoods() {
         List<NewBeeMallIndexConfigGoodsVO> newBeeMallIndexConfigGoodsVOS = new ArrayList<>();
-        List<Long> hotGoodsId = Lists.newArrayList(redisCache.getCacheZset(Constants.HOTGOODS, 0L, (long) Constants.INDEX_GOODS_HOT_NUMBER));
+        List<Long> hotGoodsId = Lists.newArrayList(redisCache.getCacheZset(Constants.HOTGOODS, 0L, (long) Constants.INDEX_GOODS_HOT_NUMBER - 1));
         List<NewBeeMallGoods> hotGoods = newBeeMallGoodsMapper.selectByPrimaryKeys(hotGoodsId);
         if (!CollectionUtils.isEmpty(hotGoods)) {
             //取出所有的goodsId
@@ -152,5 +149,31 @@ public class NewBeeMallIndexConfigServiceImpl implements NewBeeMallIndexConfigSe
         }
         //删除数据
         return indexConfigMapper.deleteBatch(ids) > 0;
+    }
+
+    @Override
+    public List<NewBeeMallIndexConfigGoodsVO> getNewGoods(long goodsNumber) {
+        List<NewBeeMallIndexConfigGoodsVO> newBeeMallIndexConfigGoodsVOS = new ArrayList<>();
+        List<NewBeeMallGoods> newBeeMallGoods = newBeeMallGoodsMapper.selectALl();
+        newBeeMallGoods.sort(Comparator.comparing(NewBeeMallGoods::getGoodsId));
+        List<NewBeeMallGoods> newBeeMallGoodsSub = newBeeMallGoods.subList(0, (int) goodsNumber);
+        if (!CollectionUtils.isEmpty(newBeeMallGoodsSub)) {
+            //取出所有的goodsId
+            newBeeMallIndexConfigGoodsVOS = BeanUtil.copyList(newBeeMallGoodsSub, NewBeeMallIndexConfigGoodsVO.class);
+            for (NewBeeMallIndexConfigGoodsVO newBeeMallIndexConfigGoodsVO : newBeeMallIndexConfigGoodsVOS) {
+                String goodsName = newBeeMallIndexConfigGoodsVO.getGoodsName();
+                String goodsIntro = newBeeMallIndexConfigGoodsVO.getGoodsIntro();
+                // 字符串过长导致文字超出的问题
+                if (goodsName.length() > 30) {
+                    goodsName = goodsName.substring(0, 30) + "...";
+                    newBeeMallIndexConfigGoodsVO.setGoodsName(goodsName);
+                }
+                if (goodsIntro.length() > 22) {
+                    goodsIntro = goodsIntro.substring(0, 22) + "...";
+                    newBeeMallIndexConfigGoodsVO.setGoodsIntro(goodsIntro);
+                }
+            }
+        }
+        return newBeeMallIndexConfigGoodsVOS;
     }
 }

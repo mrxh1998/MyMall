@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="mall/header::head-fragment('NewBee商城-消息列表','my-messages')">
+</head>
+<body>
+<header th:replace="mall/header::header-fragment"></header>
+<!-- nav -->
+<nav th:replace="mall/header::nav-fragment"></nav>
+
+<!-- personal -->
+<div id="personal">
+    <div class="self-info center">
+
+        <!-- sidebar -->
+        <div th:replace="mall/personal-sidebar::sidebar-fragment"></div>
+
+        <div class="intro fr">
+            <div class="uc-box uc-main-box">
+                <div class="uc-content-box order-list-box">
+                    <div class="box-hd">
+                        <h1 class="title">我的消息
+                            <small>请谨防钓鱼链接或诈骗电话，<a href="##">了解更多&gt;</a>
+                            </small>
+                        </h1>
+                    </div>
+                    <div class="box-bd">
+                        <div id="J_orderList">
+                            <ul class="order-list">
+                                <th:block th:if="${#lists.isEmpty(messagePageResult.list)}">
+                                    <img style="margin-top: 16px;"
+                                         th:src="@{/mall/image/null-content.png}">
+                                    <small><a th:href="@{/index}">&nbsp;&nbsp;&nbsp;&nbsp;去购物&gt;</a>
+                                    </small>
+                                </th:block>
+                                <th:block th:unless="${#lists.isEmpty(messagePageResult.list)}">
+                                    <th:block th:each="message : ${messagePageResult.list}">
+
+                                        <li class="uc-order-item uc-order-item-list">
+                                            <div class="order-detail">
+<!--                                                <div class="order-summary">-->
+<!--                                                    <th:block th:if="${message.orderStatus<0}">-->
+<!--                                                        <div class="order-status-closed">-->
+<!--                                                    </th:block>-->
+<!--                                                    <th:block th:if="${order.orderStatus==0}">-->
+<!--                                                        <div class="order-status-need-pay">-->
+<!--                                                    </th:block>-->
+<!--                                                    <th:block th:if="${order.orderStatus>0}">-->
+<!--                                                        <div class="order-status-success">-->
+<!--                                                    </th:block>-->
+<!--                                                    <th:block th:text="${' '+order.orderStatusString}"></th:block>-->
+<!--                                                </div>-->
+                                            </div>
+                                            <table class="order-detail-table">
+                                                <thead>
+                                                <tr>
+                                                    <th class="col-main"><p class="caption-info"
+                                                                            th:text="${#dates.format(message.createTime, 'yyyy-MM-dd HH:mm:ss')}">
+                                                        02月07日<span
+                                                            class="sep">|</span>订单号：<a
+                                                            href="##"
+                                                            th:text="${message.goodsId}">201908121807</a><span
+                                                            class="sep">|</span>在线支付</p></th>
+<!--                                                    <th class="col-sub"><p class="caption-price">应付金额：<span-->
+<!--                                                            class="num"-->
+<!--                                                            th:text="${order.totalPrice+'.00'}">1299.00</span>元-->
+<!--                                                    </p></th>-->
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr>
+                                                    <td class="order-items">
+                                                        <ul class="goods-list">
+                                                            <th:block>
+                                                                <li>
+                                                                    <p class="name"><a target="_blank"
+                                                                                       th:text="${message.content}">newbee</a>
+                                                                    </p>
+                                                                </li>
+                                                            </th:block>
+                                                        </ul>
+                                                    </td>
+                                                    <td class="order-actions"><a class="btn btn-small btn-line-gray"
+                                                                                 th:href="@{${'/goods/detail/'+message.goodsId}}">订单详情</a>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                        </div>
+                        </li>
+                        </th:block>
+                        </th:block>
+                        </ul>
+                    </div>
+                    <th:block th:unless="${#lists.isEmpty(messagePageResult.list)}">
+                        <div id="J_orderListPages">
+                            <div class="newbee-pagenavi">
+                                <th:block th:if="${messagePageResult.currPage-2 >=1}"><a
+                                        class="numbers"
+                                        th:href="@{'/messages?page=' + ${messagePageResult.currPage-2}}"
+                                        th:text="${messagePageResult.currPage -2}">1</a>
+                                </th:block>
+                                <th:block th:if="${messagePageResult.currPage-1 >=1}"><a
+                                        class="numbers"
+                                        th:href="@{'/messages?page=' + ${messagePageResult.currPage-1}}"
+                                        th:text="${messagePageResult.currPage -1}">1</a>
+                                </th:block>
+                                <a href="##" class="numbers current" th:text="${messagePageResult.currPage}">1</a>
+                                <th:block th:if="${messagePageResult.currPage+1<=messagePageResult.totalPage}"><a
+                                        class="numbers"
+                                        th:href="@{'/messages?page=' + ${messagePageResult.currPage+1}}"
+                                        th:text="${messagePageResult.currPage +1}">1</a></th:block>
+                                <th:block th:if="${messagePageResult.currPage+2<=messagePageResult.totalPage}"><a
+                                        class="numbers"
+                                        th:href="@{'/messages?page=' + ${messagePageResult.currPage+2}}"
+                                        th:text="${messagePageResult.currPage +2}">1</a></th:block>
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="clear"></div>
+</div>
+</div>
+
+<div th:replace="mall/footer::footer-fragment"></div>
+
+<!-- jQuery -->
+<script th:src="@{/admin/plugins/jquery/jquery.min.js}"></script>
+<script th:src="@{/mall/js/search.js}" type="text/javascript"></script>
+
+</body>
+</html>
