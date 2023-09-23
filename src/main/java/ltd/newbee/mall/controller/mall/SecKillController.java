@@ -117,9 +117,9 @@ public class SecKillController {
                           @PathVariable Long userId,
                           @PathVariable String md5) {
         // 判断md5信息是否合法
-        if (md5 == null || userId == null || !md5.equals(MD5Util.MD5Encode(seckillId.toString(), Constants.UTF_ENCODING))) {
-            throw new NewBeeMallException("秒杀商品不存在");
-        }
+//        if (md5 == null || userId == null || !md5.equals(MD5Util.MD5Encode(seckillId.toString(), Constants.UTF_ENCODING))) {
+//            throw new NewBeeMallException("秒杀商品不存在");
+//        }
         SeckillSuccessVO seckillSuccessVO = newBeeMallSeckillService.executeSeckill(seckillId, userId);
         return ResultGenerator.genSuccessResult(seckillSuccessVO);
     }

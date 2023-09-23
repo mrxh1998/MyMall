@@ -113,13 +113,14 @@ public class NewBeeMallSeckillServiceImpl implements NewBeeMallSeckillService {
     @Override
     public SeckillSuccessVO executeSeckill(Long seckillId, Long userId) {
         // 判断能否在500毫秒内得到令牌，如果不能则立即返回false，不会阻塞程序
+        userId = Long.valueOf(23);
         if (!rateLimiter.tryAcquire(500, TimeUnit.MILLISECONDS)) {
             throw new NewBeeMallException("秒杀失败");
         }
         // 判断用户是否购买过秒杀商品
-        if (redisCache.containsCacheSet(Constants.SECKILL_SUCCESS_USER_ID + seckillId, userId)) {
-            throw new NewBeeMallException("您已经购买过秒杀商品，请勿重复购买");
-        }
+//        if (redisCache.containsCacheSet(Constants.SECKILL_SUCCESS_USER_ID + seckillId, userId)) {
+//            throw new NewBeeMallException("您已经购买过秒杀商品，请勿重复购买");
+//        }
         // 更新秒杀商品虚拟库存
         Long stock = redisCache.luaDecrement(Constants.SECKILL_GOODS_STOCK_KEY + seckillId);
         if (stock < 0) {
@@ -167,11 +168,11 @@ public class NewBeeMallSeckillServiceImpl implements NewBeeMallSeckillService {
         long nowExpireTime = nowTime / 1000;
         redisCache.expire(Constants.SECKILL_SUCCESS_USER_ID + seckillId, endExpireTime - nowExpireTime, TimeUnit.SECONDS);
         //每个用户只能购买一次
-        NewBeeMallSeckillSuccess seckillSuccess = newBeeMallSeckillSuccessMapper.getSeckillSuccessByUserIdAndSeckillId(userId, seckillId);
+        //NewBeeMallSeckillSuccess seckillSuccess = newBeeMallSeckillSuccessMapper.getSeckillSuccessByUserIdAndSeckillId(userId, seckillId);
         SeckillSuccessVO seckillSuccessVO = new SeckillSuccessVO();
-        Long seckillSuccessId = seckillSuccess.getSecId();
-        seckillSuccessVO.setSeckillSuccessId(seckillSuccessId);
-        seckillSuccessVO.setMd5(MD5Util.MD5Encode(seckillSuccessId + Constants.SECKILL_ORDER_SALT, Constants.UTF_ENCODING));
+//        Long seckillSuccessId = seckillSuccess.getSecId();
+//        seckillSuccessVO.setSeckillSuccessId(seckillSuccessId);
+//        seckillSuccessVO.setMd5(MD5Util.MD5Encode(seckillSuccessId + Constants.SECKILL_ORDER_SALT, Constants.UTF_ENCODING));
         return seckillSuccessVO;
     }
 
